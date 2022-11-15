@@ -1,4 +1,4 @@
-package hello.springtx.apply;
+package hello.springtx.exception;
 
 
 import lombok.extern.slf4j.Slf4j;
