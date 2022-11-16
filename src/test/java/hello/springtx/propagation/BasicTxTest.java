@@ -79,4 +79,45 @@ public class BasicTxTest {
         log.info("트랜잭션2 롤백 시작");
         txManager.rollback(transaction2);
     }
+
+    @Test
+    void inner_commit(){
+        log.info("외부 트랜잭션 시작");
+        TransactionStatus outer = txManager.getTransaction(new DefaultTransactionAttribute());
+        log.info("outer.isNewTransaction()={}",outer.isNewTransaction());
+
+        log.info("내부 트랜잭션 시작");
+        TransactionStatus inner = txManager.getTransaction(new DefaultTransactionAttribute());
+        log.info("inner.isNewTransaction()={}",inner.isNewTransaction());
+        log.info("내부 트랜잭션 커밋");
+        txManager.commit(inner);
+        // 내부에서 커밋해도 물리 트랜잭션은 끝나지 않아서
+        // 실제로는 커밋이 일어나지 않는다.
+        log.info("외부 트랜잭션 커밋");
+        txManager.commit(outer);
+        // 이 때 커밋이 실행된다.
+        // 즉 내부 트랜잭션은 외부 트랜잭션이 커밋하기 전에는 커밋되지 않는다.
+        // 외부 트랜잭션만 물리 트랜잭션을 커밋하고 내부는 커밋이 안된다.
+        // 스프링은 외부 트랜잭션이 물리 트랜잭션을 관리하도록 한다.
+        // 내부 트랜잭션은 기존 트랜잭션에 참여한다.
+        // ==> 아무것도 안 한다는 것이다.
+    }
+    @Test
+    void outer_rollback(){
+        log.info("외부 트랜잭션 시작");
+        TransactionStatus outer = txManager.getTransaction(new DefaultTransactionAttribute());
+        // 외부 트랜잭션이 물리 트랜잭션 시작
+
+        log.info("내부 트랜잭션 시작");
+        TransactionStatus inner = txManager.getTransaction(new DefaultTransactionAttribute());
+        log.info("내부 트랜잭션 커밋");
+        txManager.commit(inner);
+        // 내부 트랜잭션은 물리 트랜잭션에 영향을 끼치지 못한다.
+
+        log.info("외부 트랜잭션 롤백");
+        txManager.rollback(outer);
+        // 외부 트랜잭션이 롤백이 된다.
+        // ==> 물리 트랜잭션 롤백
+    }
+
 }
