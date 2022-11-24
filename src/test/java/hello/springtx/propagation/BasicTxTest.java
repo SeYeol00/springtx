@@ -111,13 +111,6 @@ public class BasicTxTest {
         log.info("내부 트랜잭션 시작");
         TransactionStatus inner = txManager.getTransaction(new DefaultTransactionAttribute());
         log.info("내부 트랜잭션 커밋");
-        txManager.commit(inner);
-        // 내부 트랜잭션은 물리 트랜잭션에 영향을 끼치지 못한다.
-
-        log.info("외부 트랜잭션 롤백");
-        txManager.rollback(outer);
-        // 외부 트랜잭션이 롤백이 된다.
-        // ==> 물리 트랜잭션 롤백
     }
 
 }
