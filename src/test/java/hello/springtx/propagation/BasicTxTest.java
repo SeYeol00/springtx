@@ -111,6 +111,28 @@ public class BasicTxTest {
         log.info("내부 트랜잭션 시작");
         TransactionStatus inner = txManager.getTransaction(new DefaultTransactionAttribute());
         log.info("내부 트랜잭션 커밋");
+        txManager.commit(inner);
+
+        log.info("외부 트랜잭션 롤백");
+        txManager.rollback(outer);
+    }
+
+    @Test
+    void inner_rollback(){
+        log.info("외부 트랜잭션 시작");
+        TransactionStatus outer = txManager.getTransaction(new DefaultTransactionAttribute());
+
+
+        log.info("내부 트랜잭션 시작");
+        TransactionStatus inner = txManager.getTransaction(new DefaultTransactionAttribute());
+        log.info("내부 트랜잭션 롤백");
+        txManager.rollback(inner); // rollback-only 표시
+        // 내부 트랜잭션을 롤백하면 실제 물리 트랜잭션은 롤백하지 않는다.
+        // 대신에 기존 트랜잭션을 롤백 전용으로 표시한다.
+        // 여기서 롤백 온리 표시가 나왔기 때문에
+        // 롤백만 되어야한다.
+        log.info("외부 트랜잭션 커밋");
+        txManager.commit(outer);
     }
 
 }
