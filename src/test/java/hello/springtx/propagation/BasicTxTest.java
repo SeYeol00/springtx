@@ -2,6 +2,7 @@ package hello.springtx.propagation;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,7 +10,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.UnexpectedRollbackException;
 import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
 
 import javax.sql.DataSource;
@@ -132,7 +135,33 @@ public class BasicTxTest {
         // 여기서 롤백 온리 표시가 나왔기 때문에
         // 롤백만 되어야한다.
         log.info("외부 트랜잭션 커밋");
+        Assertions.assertThatThrownBy(()->txManager.commit(outer))
+                .isInstanceOf(UnexpectedRollbackException.class);
+
+    }
+
+    @Test
+    void inner_rollback_requires_new(){
+        log.info("외부 트랜잭션 시작");
+        TransactionStatus outer = txManager.getTransaction(new DefaultTransactionAttribute());
+        log.info("outer.isNewTransaction={}",outer.isNewTransaction());
+
+        log.info("내부 트랜잭션 시작");
+        // 여기서 분리를 시킨다.
+        DefaultTransactionAttribute definition = new DefaultTransactionAttribute();
+        // 내부와 외부를 분리시킨다. 핵심
+        // setter를 통해서 프로퍼게이션비헤비어에 값을 넣어준다.
+        definition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        TransactionStatus inner = txManager.getTransaction(definition);
+        // 이러면 아예 분리되어서 이너를 만들 수 있다.
+        log.info("inner.isNewTransaction()={}",inner.isNewTransaction());//true
+
+        log.info("내부 트랜잭션 롤백");
+        txManager.rollback(inner);
+
+        log.info("외부 트랜잭션 커밋");
         txManager.commit(outer);
+
     }
 
 }
