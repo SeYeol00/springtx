@@ -15,7 +15,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LogRepository {
 
-    private EntityManager em;
+    private final EntityManager em;
 
     @Transactional
     public void save(Log logMessage){
@@ -29,9 +29,9 @@ public class LogRepository {
         }
     }
 
-    public Optional<Member> find(String username){
-        return em.createQuery("select m from Member m where m.username = :username",Member.class)
-                .setParameter("username",username)
+    public Optional<Log> find(String message){
+        return em.createQuery("select l from Log l where l.message = :message",Log.class)
+                .setParameter("message",message)
                 .getResultList().stream().findAny();
         // JPQL
 
