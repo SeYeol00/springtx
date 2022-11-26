@@ -3,6 +3,8 @@ package hello.springtx.propagation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -13,12 +15,15 @@ public class MemberService {
 
     private final LogRepository logRepository;
 
+    @Transactional
     public void joinV1(String username){
         Member member = new Member(username);
         Log logMessage = new Log(username);
 
 
         // 트랜잭션을 각각 사용하는 예제
+        // 각각 사용하니 성공하였다. 트랜잭션 전파가 없었다.
+        // 커넥션 두 개를 쓴다.
         log.info("== memberRepository 호출 시작 ==");
         memberRepository.save(member);
         log.info("== memberRepository 호출 종료 ==");
@@ -29,6 +34,7 @@ public class MemberService {
 
     }
 
+    @Transactional
     public void joinV2(String username){
         // 예외를 잡는 예제
         Member member = new Member(username);
